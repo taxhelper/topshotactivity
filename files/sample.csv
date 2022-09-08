@@ -1,0 +1,5 @@
+Activity Type,Date,Subtotal,Fee,Total Amount,Payment Method,Payment ID,Status
+NBA Top Shot sale,2022-08-27 04:43:33.419581 +0000 UTC,2.85,0.00,2.85,Dapper Balance,be1682ff-6dbe-4ebf-8cb4-6ac0dabcf03d,SUCCEEDED
+NBA Top Shot sale,2021-03-06 06:07:55.289006 +0000 UTC,636.50,0.00,636.50,Dapper Balance,95adf8e7-2a26-5f6f-a71e-4e9d83cd3cf1,SUCCEEDED
+NBA Top Shot purchase,2021-02-28 01:51:43.199382 +0000 UTC,14.00,1.04,15.04,VISA,ed15dfa1-46er-4dee-bff0-ea759650074c,SUCCEEDED
+NBA Top Shot purchase,2021-02-27 23:28:59.132227 +0000 UTC,9.00,0.78,9.78,VISA,addf8f10-959b-ab9e-81b7-012696a20c97,SUCCEEDED

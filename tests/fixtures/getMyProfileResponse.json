@@ -1,0 +1,15 @@
+{
+  "data": {
+    "getMyProfile": {
+      "email": "example@example.com",
+      "publicInfo": {
+        "dapperID": "auth|123456789",
+        "flowAddress": "f1000000000000000",
+        "username": "jubilant_cornichons774o",
+        "createdAt": "2021-02-24T00:23:03Z",
+        "__typename": "UserPublicInfo"
+      },
+      "__typename": "GetMyProfileResponse"
+    }
+  }
+}

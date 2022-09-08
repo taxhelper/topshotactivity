@@ -1,0 +1,25 @@
+{
+  "name": "topshotactivity",
+  "version": "1.0.0",
+  "description": "Get detailed activity for NBA Top Shot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "author": "taxhelper",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "bottleneck": "^2.19.5",
+    "dataframe-js": "^1.4.4",
+    "dotenv": "^16.0.1",
+    "inquirer": "^8.2.4",
+    "inquirer-date-prompt": "^2.0.1",
+    "jest": "^29.0.3",
+    "lodash": "^4.17.21",
+    "luxon": "^3.0.1",
+    "scramjet": "^4.36.7",
+    "tzdata": "^1.0.30"
+  }
+}
