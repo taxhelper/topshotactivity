@@ -27,7 +27,7 @@ Only use this program running locally on your own computer and never provide you
 
 4. Type `npm install` and press return/enter. This will install the required packages used in this program.
 
-5. The program is now ready to run but you need to gather some things - see list of requirements.
+5. The program is now ready to run (with `npm run start`) but you need to gather some things - see list of requirements that follows.
 
 ## 2. Gather list of requirements
 
