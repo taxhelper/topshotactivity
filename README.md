@@ -31,9 +31,6 @@ Only use this program running locally on your own computer and never provide you
 
 ## 2. Gather list of requirements
 
-<img width="572" alt="Screen Shot 2022-10-05 at 9 18 25 am" src="https://user-images.githubusercontent.com/113106314/193945562-d7dd2210-2a84-4d26-a369-8ba6f8165789.png">
-
-
 ### - Top Shot Activity CSV
 
 1. Visit your Dapper account on Top Shot and download a CSV file of all your Activity: [https://accounts.meetdapper.com/home](https://accounts.meetdapper.com/home)
@@ -53,9 +50,11 @@ Only use this program running locally on your own computer and never provide you
 
 In the terminal, type `npm run start` and the program will run.
 
+<img width="572" alt="Screen Shot 2022-10-05 at 9 18 25 am" src="https://user-images.githubusercontent.com/113106314/193945562-d7dd2210-2a84-4d26-a369-8ba6f8165789.png">
+
 It will output a CSV of your records.
 
-Scroll up once the program has run to see any info about manually checking entries.
+Once it completes, scroll up in the terminal to see any info about manually checking entries.
 
 # Comments
 
