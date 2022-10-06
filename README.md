@@ -13,6 +13,8 @@ See comments at the bottom of this readme for more info.
 
 If this program helps you, please consider sending a top shot gift to [jubilant_cornichons774o](https://nbatopshot.com/user/@jubilant_cornichons774o)
 
+Note: This has been tested with my account that had around 1000 transactions. 
+
 ## DISCLAIMER - protect yourself
 
 Only use this program running locally on your own computer and never provide your token details to anyone, even if they insist they can help you run this program.
