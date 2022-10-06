@@ -40,6 +40,8 @@ Only use this program running locally on your own computer and never provide you
 
 ### - Top Shot Token (never share this with anyone)
 
+This token is used to gather more detailed activity info from the Top Shot site itself.
+
 1. Open a browser and navigate to the NBA Top Shot website. Make sure you are logged in.
 2. In the same browser window, replace the url with this one [https://nbatopshot.com/api/auth0/session](https://nbatopshot.com/api/auth0/session)
 3. Copy the value for `idToken` and have it ready when you run the program
