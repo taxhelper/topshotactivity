@@ -19,6 +19,10 @@ Note: This has been tested with my account that had around 1000 transactions.
 
 Only use this program running locally on your own computer and never provide your token details to anyone, even if they insist they can help you run this program.
 
+This tool uses your top shot token to make direct api requests to NBA Top Shot to gather more information about your account. Note that this provides direct access to your account so you should make sure that you first trust this tool and only run it on your own computer and never share your token. 
+
+For any open source tool, please review the code base to ensure that you trust and understand what it is doing.
+
 ## 1. Running from source code - How to set up the program ready to use
 
 1. Download node.js & npm - this program is written in node so you will need a copy of that on your computer. Visit https://nodejs.org/ to download and follow the install instructions and confirm that the install is working.
