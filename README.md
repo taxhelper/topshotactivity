@@ -25,7 +25,7 @@ For any open source tool, please review the code base to ensure that you trust a
 
 ## 1. Running from source code - How to set up the program ready to use
 
-1. Download node.js & npm - this program is written in node so you will need a copy of that on your computer. Visit https://nodejs.org/ to download and follow the install instructions and confirm that the install is working.
+1. Download node.js (v14+) & npm - this program is written in node so you will need a copy of that on your computer. Visit https://nodejs.org/ to download and follow the install instructions and confirm that the install is working.
 
 2. Download a copy of this repository by cloning or downloading a zip of this repository into a new folder on your computer.
 
