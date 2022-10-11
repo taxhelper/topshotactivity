@@ -81,9 +81,11 @@ async function parseCsv({
   console.log('flowAddress', flowAddress)
   console.log('dapperID', dapperID)
 
-  // const csvFile = process.env.DEV_MODE ? 'sample.csv' : `${fileName}`
-  const csvFile = process.env.DEV_MODE ? '20220802.csv' : `${fileName}`
-  let df = await DataFrame.fromCSV(path.join(filesPath, csvFile));
+  const csvFile = process.env.DEV_MODE ? 'sample.csv' : `${fileName}`
+
+  // this is to deal with issue in dataframe-js package where windows files aren't given correct file:// prefix
+  const usePath = process.platform === 'win32' ? `file://${path.join(filesPath, csvFile)}` : path.join(filesPath, csvFile)
+  let df = await DataFrame.fromCSV(usePath);
 
   console.log('Total rows', df.count())
 
