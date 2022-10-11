@@ -262,6 +262,8 @@ async function getMomentRanksData(flowAddress) {
 
   const data = JSON.stringify({ data: mrResults });
   fs.writeFileSync(path.join(activityFilesPath, `${today}_activity_mr.json`), data);
+
+  return mrResults;
 }
 
 
