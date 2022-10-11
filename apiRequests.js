@@ -231,15 +231,12 @@ async function findMomentDetailsOfSerial(flowId) {
 }
 
 async function fetchResults(flowAddress, pageNumber) {
-  console.log('doing page pageNumber', pageNumber)
-  const mrUrl = `https://api.momentranks.com/v1/topshot/transactions?buyer=0x${flowAddress}&page=${pageNumber}&seller=0x${flowAddress}&sortBy=-blockTimestamp`
+  console.log('Grabbing moment ranks page pageNumber', pageNumber)
+  const mrUrl = `https://api.momentranks.com/v1/topshot/transactions?buyer=${flowAddress}&page=${pageNumber}&seller=0x${flowAddress}&sortBy=-blockTimestamp`
 
   // Make a request
   try {
     const response = await axios.get(mrUrl);
-
-    console.log('Results', response)
-
     return response.data
 
   } catch (e) {
@@ -257,7 +254,6 @@ async function getMomentRanksData(flowAddress) {
 
   while (hasNextPage) {
     const response = await fetchResults(flowAddress, pageNumber)
-    console.log(response)
     // add results to array
     mrResults = mrResults.concat(response.docs)
     hasNextPage = response.hasNextPage
