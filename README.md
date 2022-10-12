@@ -23,6 +23,12 @@ This tool uses your top shot token to make direct api requests to NBA Top Shot t
 
 For any open source tool, please review the code base to ensure that you trust and understand what it is doing.
 
+## DISCLAIMER - this is not tax or financial advice & there might be errors! 
+
+In using this program you accept that this is just a helper tool and that there may be errors in the code and results, and that you should not rely on the outputted data. In using this program you agree that you won't hold the author responsible or liable for any errors.
+
+You are encouraged to check the code and calculations, as well as manually checking transactions (some transactions may be skipped and not included in the final calculations - see program output for details).
+
 ## 1. Running from source code - How to set up the program ready to use
 
 1. Download node.js (v14+) & npm - this program is written in node so you will need a copy of that on your computer. Visit https://nodejs.org/ to download and follow the install instructions and confirm that the install is working.
