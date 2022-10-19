@@ -95,8 +95,15 @@ async function parseCsv({
   // then let's sort the DF by createdAt
   df = df.sortBy('date')
 
-  // Extract activity type
-  df = df.withColumn('activity_type', (row) => row.get('activity').split(" ").pop())
+  // Extract activity type (sale or purchase)
+  df = df.withColumn('activity_type', (row) => {
+    const activity = row.get('activity')
+    // manually handle offer purchases
+    if (activity === 'Dapper ACCEPTED') {
+      return 'purchase'
+    }
+    return activity.split(" ").pop()
+  })
 
   // Remove NFL All Day for now
   df = df.filter(row => !(/Gaia sale|NFL ALL DAY.+/).test(row.get('activity')))
@@ -142,7 +149,7 @@ async function parseCsv({
   }
 
   // do this after top shot activity
-  console.log('Getting MR activity to help with reconcilation')
+  console.log('Getting Moment Ranks activity to help with reconcilation')
   let mrActivity;
   try {
     mrActivity = require(path.join(activityFilesPath, `${today}_activity_mr.json`))
@@ -165,7 +172,6 @@ async function parseCsv({
   console.log('Reconciling activity with export...')
   df = await reconcileActivityWithExport(df, topShotActivityData, mrActivity, dapperID)
   df = await addTradesAndGifts(df, topShotActivityData, selectedCurrency)
-
   // sort again
   df = df.sortBy('date')
 
@@ -174,18 +180,19 @@ async function parseCsv({
   df = addAccountBalance(df)
 
   // Match moments to packs
-  console.log('Matching moments to packs...')
+  console.log('Matching moments to packs...', purchasedPacks)
   if (Object.keys(purchasedPacks).length) {
     const { packsWithNoMomentInfo, momentIdWithPackDetails } = await getTopShotPackInfo(topshotToken, purchasedPacks)
     // now update dataframe for these moments
     console.log('\n')
     console.log('You will need to manually check: packsWithNoMomentInfo :', packsWithNoMomentInfo)
+    console.log('momentIdWithPackDetails', momentIdWithPackDetails)
     df = await reconcileMomentsWithPacks(df, momentIdWithPackDetails)
   }
 
   console.log('Working out profits from P2P purchases and sales...')
   // get all sales not from pack, and work out profit from sale
-  const allPurchases = df.filter(row => row.get('activity_details') === "PURCHASE_P2P_MOMENT")
+  const allPurchases = df.filter(row => ["PURCHASE_P2P_MOMENT", "OFFER_AVAILABLE"].includes(row.get('activity_details')))
   const allPurchasesObject = allPurchases.toCollection(true)
   const allPurchasesObjectValues = allPurchasesObject.map(purchase => purchase.toDict())
 
@@ -221,7 +228,7 @@ async function parseCsv({
 // $A 19.03
 async function calculationForexRealistion(df) {
   const depositActivities = ['NBA Top Shot sale', 'Dapper purchase', 'Dapper receive', 'Dapper adjustment'];
-  const withdrawalActivities = ['Dapper withdrawal', 'NBA Top Shot purchase'];
+  const withdrawalActivities = ['Dapper withdrawal', 'NBA Top Shot purchase', 'Dapper ACCEPTED'];
 
   // Get all deposit activities
   let allDeposits = df.filter(row => depositActivities.includes(row.get('activity')) && row.get('total_usd') > 0)
@@ -323,9 +330,11 @@ async function calculationForexRealistion(df) {
 }
 
 async function reconcileSalesWithP2PPurchases(df, purchases) {
+  console.log('If any unknown purchase origins are recorded below they may be challenge rewards or a moment from a pack that was not properly recorded')
   df = df.map(
     row => {
-      if (row.get('activity_details') === 'P2P_MOMENT_LISTING_SOLD') {
+      // if a sale..
+      if (['P2P_MOMENT_LISTING_SOLD', 'OFFER_COMPLETED'].includes(row.get('activity_details'))) {
         // find the purchase details
         const purchaseDetails = purchases.find(purchase => purchase.moment_id === row.get('moment_id'))
         if (purchaseDetails) {
@@ -340,13 +349,25 @@ async function reconcileSalesWithP2PPurchases(df, purchases) {
         } else {
           if (!row.get('sale_profit_usd')) {
             // this might be a challenge moment or a moment from a pack that wasn't properly recorded
-            console.log('Unknown origin for payment_id: ', row.get('payment_id'))
+            console.log('Unknown purchase origin for sale payment_id: ', row.get('payment_id'))
           }
         }
       }
       return row
     })
   return df
+}
+
+function getOrderSpecifier(activityType) {
+  let orderSpecifier = "order"
+  if (activityType === 'MOMENT_TRADE_IN_REQUEST') {
+    orderSpecifier = "tradeIn"
+  } else if (activityType === 'MOMENT_TRANSFER_REQUEST') {
+    orderSpecifier = "transfer"
+  } else if (['OFFER_AVAILABLE', 'OFFER_COMPLETED'].includes(activityType)) {
+    orderSpecifier = "offer"
+  }
+  return orderSpecifier
 }
 
 async function reconcileMomentsWithPacks(df, momentIdWithPackDetails) {
@@ -383,7 +404,7 @@ function addAccountBalance(df) {
         accountBalance = accountBalance
       } else if ((/.+sale|Dapper purchase|Dapper receive|Dapper adjustment/).test(row.get('activity'))) {
         accountBalance = accountBalance + Number(row.get('total_usd'));
-      } else if ((/.+purchase|Dapper withdrawal/).test(row.get('activity'))) {
+      } else if ((/.+purchase|Dapper withdrawal|Dapper ACCEPTED/).test(row.get('activity'))) {
         accountBalance = accountBalance - Number(row.get('total_usd'));
       }
 
@@ -397,21 +418,52 @@ function addAccountBalance(df) {
   return df
 }
 
-function getMatchingActivity(topShotActivityData, date, totalUsd, saleOrPurchase, usedActivityIdMatches, dateSubstringLimit = 16) {
-  const totalUsdWithFees = saleOrPurchase === 'sale' ?
-    (totalUsd / 0.95).toFixed(2) : totalUsd;
+function getMatchingActivity(topShotActivityData, row, usedActivityIdMatches, dateSubstringLimit = 16) {
+
+  const date = row.get('date')
+  const subTotal = row.get('subtotal_usd')
+  const totalUsd = row.get('total_usd')
+  const paymentMethod = row.get('payment_method')
+  const saleOrPurchase = row.get('activity_type')
+  // note using subtotal here
+  let priceToCompare;
+  // if offer
+  if (['Dapper offer sale', 'Dapper ACCEPTED'].includes(row.get('activity'))) {
+    // Dapper activity csv suggests all offers have fees
+    priceToCompare = (subTotal / 0.95).toFixed(2)
+  } else if (paymentMethod === 'Dapper Balance') {
+    priceToCompare = saleOrPurchase === 'sale' ? (subTotal / 0.95).toFixed(2) : subTotal.toFixed(2);
+  } else {
+    priceToCompare = subTotal.toFixed(2)
+  }
   const matchedArray = _.filter(topShotActivityData, (activity) => {
     // skip these ones for now
-    // MOMENT_TRANSFER_REQUEST = gift (not in csv download file)
+    // MOMENT_TRANSFER_REQUEST, MOMENT_TRANSFER_RECEIVED = gifts (not in csv download file)
     // MOMENT_TRADE_IN_REQUEST = trade for tickets
-    if (['MOMENT_TRANSFER_REQUEST', 'MOMENT_TRADE_IN_REQUEST'].includes(activity.activityType) ||
+    if (['MOMENT_TRANSFER_REQUEST', 'MOMENT_TRANSFER_RECEIVED', 'MOMENT_TRADE_IN_REQUEST'].includes(activity.activityType) ||
       activity.status !== "SUCCESS") {
       return false
     }
 
-    const dateIsEqual = date.substring(0, dateSubstringLimit) === activity.createdAt.substring(0, dateSubstringLimit)
-    const activityPrice = activity.subject.order ? activity.subject.order.price : activity.subject.tradeIn.price;
-    const priceIsEqual = totalUsdWithFees == Number(activityPrice).toFixed(2)
+    const orderSpecifier = getOrderSpecifier(activity.activityType)
+    let dateToCompare = 'createdAt'
+
+    // if this is an offer suggested (for purchasing)
+    if (activity.activityType === 'OFFER_AVAILABLE') {
+      // don't consider trying to match if not a completed purchase (ie if pending)
+      if (!activity.subject.offer.completed || !activity.subject.offer.purchased) {
+        return false
+      }
+    }
+
+    if (['OFFER_AVAILABLE', 'OFFER_COMPLETED'].includes(activity.activityType)) {
+      // use updatedAt date for OFFERS_AVAILABLE as that represents when the purchase was made
+      dateToCompare = 'updatedAt'
+    }
+
+    const dateIsEqual = date.substring(0, dateSubstringLimit) === activity[dateToCompare].substring(0, dateSubstringLimit)
+    const activityPrice = activity.subject[orderSpecifier].price;
+    const priceIsEqual = priceToCompare == Number(activityPrice).toFixed(2)
 
     const activityNotAlreadyMatched = !usedActivityIdMatches.includes(activity.id)
 
@@ -421,7 +473,7 @@ function getMatchingActivity(topShotActivityData, date, totalUsd, saleOrPurchase
   if (!matchedArray.length) {
     // try again until date is too short
     if (dateSubstringLimit > 13) {
-      return getMatchingActivity(topShotActivityData, date, totalUsd, saleOrPurchase, usedActivityIdMatches, dateSubstringLimit - 1)
+      return getMatchingActivity(topShotActivityData, row, usedActivityIdMatches, dateSubstringLimit - 1)
     }
   }
 
@@ -470,13 +522,15 @@ function prepareDataForRow(activity, isPack, orderSpecifier) {
   const momentId = isPack ? null : activity.subject[orderSpecifier].moment.id;
   const momentPlayId = isPack ? null : activity.subject[orderSpecifier].moment.play.id;
   const setOrPackIds = isPack ? activity.subject.order.packs.map(p => p.id) : activity.subject[orderSpecifier].moment.set.id;
-  const momentGeneralPath = isPack ? null : `listings/p2p/${setOrPackIds}+${momentPlayId}`;
-  const momentSerialPath = isPack ? null : `moment/${momentId}`;
+  const momentGeneralPath = isPack ? null : `https://nbatopshot.com/listings/p2p/${setOrPackIds}+${momentPlayId}`;
+  const momentSerialPath = isPack ? null : `https://nbatopshot.com/moment/${momentId}`;
   let price;
   if (activity.activityType === 'P2P_MOMENT_LISTING_SOLD') {
     price = activity.subject.order.price * 0.95;
   } else if (['PURCHASE_PACK_WITH_TICKETS', 'MOMENT_TRADE_IN_REQUEST'].includes(activity.activityType)) {
     price = 0
+  } else if (['OFFER_COMPLETED', 'OFFER_AVAILABLE'].includes(activity.activityType)) {
+    price = activity.subject.offer.price
   } else {
     price = activity.subject.order.price
   }
@@ -506,7 +560,7 @@ function prepareDataForRowMr(activity, saleOrPurchase) {
   const momentId = null
   const momentPlayId = activity.moment.playDapperId;
   const setOrPackIds = activity.moment.setDapperId;
-  const momentGeneralPath = `listings/p2p/${setOrPackIds}+${momentPlayId}`;
+  const momentGeneralPath = `https://nbatopshot.com/listings/p2p/${setOrPackIds}+${momentPlayId}`;
   const momentSerialPath = null
   let price;
   if (saleOrPurchase === 'sale') {
@@ -550,25 +604,21 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
         }
 
         // preconditions met
-        const activityArray = getMatchingActivity(topShotActivityData, row.get('date'), row.get('subtotal_usd'), row.get('activity_type'), usedActivityIdMatches)
+        const activityArray = getMatchingActivity(topShotActivityData, row, usedActivityIdMatches)
 
         let activity;
         if (!activityArray.length) {
-          // try and find it from mrAcvities
+          // try and find it from moment ranks activities if not an offer
           const mrActivitiesArray = tryAndPopulateFromMrActivity(mrActivity, row.get('date'), row.get('subtotal_usd'), row.get('activity_type'), dapperID, matchedMrActivities)
 
           if (mrActivitiesArray.length) {
             activity = mrActivitiesArray[0]
             activity.source = 'momentRanks'
             matchedMrActivities.push(activity.blockTimestamp)
-
-            // look up more moment details
-
           } else {
             console.log(`>>>>>>>>>> NO MATCH FOR payment Id ${row.get('payment_id')} --- ${row.get('activity')} <<<<<<<<<`);
             noMatch.push(row.toDict())
           }
-
         } else if (activityArray.length > 1) {
           // console.log(`>>>>>>>>>> MULTIPLE MATCHES FOR payment Id ${row.get('payment_id')} <<<<<<<<<`);
           // console.log(`>>>>>>>>>> MATCHES are ${activityArray.map(a => a.id)} <<<<<<<<<`);
@@ -582,6 +632,7 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
           activity.source = 'topShot'
         }
         if (activity) {
+          console.log('Working on ', row.get('payment_id'))
           let rowData
           let dapperSaleFee
           let jsonDataId
@@ -603,8 +654,9 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
             mrTokenId = activity.tokenId
             const otherPartyType = row.get('activity_type') === 'sale' ?
               'buyer' : 'seller'
-            otherPartyId = activity[otherPartyType].dapperId
-            otherParty = activity[otherPartyType].username
+
+            otherPartyId = activity[otherPartyType]?.dapperId
+            otherParty = activity[otherPartyType]?.username
 
             dapperSaleFee = row.get('activity_type') === 'sale' ?
               (row.get('total_usd') / 0.95) - row.get('total_usd') : 0;
@@ -626,12 +678,7 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
               }
             }
 
-            let orderSpecifier = "order"
-            if (activity.activityType === 'MOMENT_TRADE_IN_REQUEST') {
-              orderSpecifier = "tradeIn"
-            } else if (activity.activityType === 'MOMENT_TRANSFER_REQUEST') {
-              orderSpecifier = "transfer"
-            }
+            const orderSpecifier = getOrderSpecifier(activity.activityType)
 
             rowData = prepareDataForRow(activity, isPack, orderSpecifier)
 
@@ -670,8 +717,11 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
             otherPartyId = mrActivityDetails && mrActivityDetails[otherPartyType] && mrActivityDetails[otherPartyType].dapperId
             otherParty = mrActivityDetails && mrActivityDetails[otherPartyType] && mrActivityDetails[otherPartyType].username
 
-            dapperSaleFee = activity.activityType === 'P2P_MOMENT_LISTING_SOLD' ?
-              (row.get('total_usd') / 0.95) - row.get('total_usd') : 0;
+            if (['P2P_MOMENT_LISTING_SOLD', 'OFFER_AVAILABLE', 'OFFER_COMPLETED'].includes(activity.activityType)) {
+              dapperSaleFee = (row.get('total_usd') / 0.95) - row.get('total_usd')
+            } else {
+              dapperSaleFee = 0;
+            }
           }
 
           row = row.set('json_data_id', jsonDataId)
@@ -712,8 +762,8 @@ async function reconcileActivityWithExport(df, topShotActivityData, mrActivity, 
     if (serialDetails) {
       momentSearchResults[tokenId] = {
         momentId: serialDetails.id,
-        momentGeneralPath: `listings/p2p/${serialDetails.set.id}+${serialDetails.play.id}`,
-        momentSerialPath: `moment/${serialDetails.id}`
+        momentGeneralPath: `https://nbatopshot.com/listings/p2p/${serialDetails.set.id}+${serialDetails.play.id}`,
+        momentSerialPath: `https://nbatopshot.com/moment/${serialDetails.id}`
       }
     }
   }
