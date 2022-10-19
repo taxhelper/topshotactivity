@@ -361,7 +361,7 @@ async function reconcileSalesWithP2PPurchases(df, purchases) {
 
 function getOrderSpecifier(activityType) {
   let orderSpecifier = "order"
-  if (activityType === 'MOMENT_TRADE_IN_REQUEST') {
+  if (['MOMENT_TRANSFER_RECEIVED', 'MOMENT_TRADE_IN_REQUEST'].includes(activityType)) {
     orderSpecifier = "tradeIn"
   } else if (activityType === 'MOMENT_TRANSFER_REQUEST') {
     orderSpecifier = "transfer"
