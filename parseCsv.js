@@ -375,7 +375,7 @@ async function reconcileMomentsWithPacks(df, momentIdWithPackDetails) {
   df = df.map(
     row => {
       const momentDetails = momentIdWithPackDetails[row.get('moment_id')]
-      if (momentDetails && row.get('activity') === 'NBA Top Shot sale') {
+      if (momentDetails && ['NBA Top Shot sale', 'Dapper offer sale'].includes(row.get('activity'))) {
         // update the row details
         // use subtotal usd to take into account VISA purchases
         const saleProfit = row.get('subtotal_usd') - momentDetails.costOfMoment
