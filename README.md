@@ -7,27 +7,30 @@ This program outputs a detailed CSV file of your Top Shot activity, including:
 - forex gains and losses based on your selected currency
 
 It will save your detailed Topshot activity to a CSV file which has the following headers:
->`activity, date, subtotal_usd, fee_usd, total_usd, payment_method, payment_id, status, activity_type, brief_date, id, dapper_sale_fee_usd, dapper_sale_fee_to_currency, other_currency, usd_to_currency_rate, total_currency, json_data_id, item, player, play_category, team, flow_token_id, other_party_to_transactionId, other_party_to_transaction, main_data_source, order_id, moment_play_id, set_or_pack_ids, serial_number, activity_details, set_information, is_pack, pack_quantity, moment_general_path, moment_serial_path, moment_id, sale_profit_usd, sale_profit_currency, from_pack_id, days_held, account_balance, account_balance_currency, forex_realisation, forex_gain, selected_timezone, date_in_selected_timezone`
+
+> `activity, date, subtotal_usd, fee_usd, total_usd, payment_method, payment_id, status, activity_type, brief_date, id, dapper_sale_fee_usd, dapper_sale_fee_to_currency, other_currency, usd_to_currency_rate, total_currency, json_data_id, item, player, play_category, team, flow_token_id, other_party_to_transactionId, other_party_to_transaction, main_data_source, order_id, moment_play_id, set_or_pack_ids, serial_number, activity_details, set_information, is_pack, pack_quantity, moment_general_path, moment_serial_path, moment_id, sale_profit_usd, sale_profit_currency, from_pack_id, days_held, account_balance, account_balance_currency, forex_realisation, forex_gain, selected_timezone, date_in_selected_timezone`
 
 See comments at the bottom of this readme for more info.
 
 If this program helps you, please consider sending a top shot gift to [jubilant_cornichons774o](https://nbatopshot.com/user/@jubilant_cornichons774o)
 
-Note: This has been tested with my account that had around 1000 transactions. 
+Note: This has been tested with my account that had around 1000 transactions.
 
 ## DISCLAIMER - protect yourself
 
 Only use this program running locally on your own computer and never provide your token details to anyone, even if they insist they can help you run this program.
 
-This tool uses your top shot token to make direct api requests to NBA Top Shot to gather more information about your account. Note that this provides direct access to your account so you should make sure that you first trust this tool and only run it on your own computer and never share your token. 
+This tool uses your top shot token to make direct api requests to NBA Top Shot to gather more information about your account. Note that this provides direct access to your account so you should make sure that you first trust this tool and only run it on your own computer and never share your token.
 
 For any open source tool, please review the code base to ensure that you trust and understand what it is doing.
 
-## DISCLAIMER - this is not tax or financial advice & there might be errors! 
+## DISCLAIMER - this is not tax or financial advice & there might be errors!
 
 In using this program you accept that this is just a helper tool and that there may be errors in the code and results, and that you should not rely on the outputted data. In using this program you agree that you won't hold the author responsible or liable for any errors.
 
-You are encouraged to check the code and calculations, as well as manually checking transactions (some transactions may be skipped and not included in the final calculations - see program output for details).
+I developed this tailored to my own activity so it may overlook certain circumstances. Please check over the code and calculations, as well as manually checking transactions (some transactions may be skipped and not included in the final calculations - see program output for details). Fees may also not be properly handled.
+
+The code will output a CSV will the details of the translations and the best possible match between moments and packs, and sales and purchases. You can use these values to run your own calculations and ignore the calculations produced by the program.
 
 ## 1. Running from source code - How to set up the program ready to use
 
@@ -57,8 +60,9 @@ This token is used to gather more detailed activity info from the Top Shot site 
 3. Copy the value for `idToken` and have it ready when you run the program
 
 ### - Foreign Currency - optional
-  If you want foreign currency conversions (and foreign currency gains/losses), you will need to set up a free account with [https://openexchangerates.org](https://openexchangerates.org) and have your App ID ready.
-  This site lets you make a 1000 free requests per month. This program requests the exchange rate for a given day, and once retrieved, the rates are saved to a file and reused. As Top Shot hasn't existed for 1000 days yet, you won't go over your quota unless you run this program multiple times from different folders.
+
+If you want foreign currency conversions (and foreign currency gains/losses), you will need to set up a free account with [https://openexchangerates.org](https://openexchangerates.org) and have your App ID ready.
+This site lets you make a 1000 free requests per month. This program requests the exchange rate for a given day, and once retrieved, the rates are saved to a file and reused. As Top Shot hasn't existed for 1000 days yet, you won't go over your quota unless you run this program multiple times from different folders.
 
 ## Ready to run the program?
 
@@ -71,8 +75,6 @@ It will output a CSV of your records.
 Once it completes, scroll up in the terminal to see any info about manually checking entries.
 
 # Comments
-
-I developed this tailored to my own activity so it may overlook certain circumstances.
 
 - PACKS and MOMENTS:
   - Moments from packs have a "purchase price" which is equivalent to the cost of the pack divided by the number of moments in the pack
@@ -95,4 +97,4 @@ I developed this tailored to my own activity so it may overlook certain circumst
     - Deposit of $1000 USD on 1 Jan 2021 (= $1,400 AUD on that date)
     - Withdrawal of $1000 USD on 4 March 2021 (= $1,300 AUD on that date)
       = Forex loss of $100 AUD
-- OFFERS are not included in this program
+- OFFERS are included in this program
