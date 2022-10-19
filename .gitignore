@@ -6,3 +6,4 @@ files
 activityFiles
 introspectionresponse.json
 *.csv
+.vscode
