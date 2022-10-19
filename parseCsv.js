@@ -180,13 +180,12 @@ async function parseCsv({
   df = addAccountBalance(df)
 
   // Match moments to packs
-  console.log('Matching moments to packs...', purchasedPacks)
+  console.log('Matching moments to packs...')
   if (Object.keys(purchasedPacks).length) {
     const { packsWithNoMomentInfo, momentIdWithPackDetails } = await getTopShotPackInfo(topshotToken, purchasedPacks)
     // now update dataframe for these moments
     console.log('\n')
     console.log('You will need to manually check: packsWithNoMomentInfo :', packsWithNoMomentInfo)
-    console.log('momentIdWithPackDetails', momentIdWithPackDetails)
     df = await reconcileMomentsWithPacks(df, momentIdWithPackDetails)
   }
 
