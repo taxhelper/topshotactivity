@@ -227,7 +227,7 @@ async function parseCsv({
 // Forex loss
 // $A 19.03
 async function calculationForexRealistion(df) {
-  const depositActivities = ['NBA Top Shot sale', 'Dapper purchase', 'Dapper receive', 'Dapper adjustment'];
+  const depositActivities = ['NBA Top Shot sale', 'Dapper purchase', 'Dapper receive', 'Dapper adjustment', 'Dapper offer sale'];
   const withdrawalActivities = ['Dapper withdrawal', 'NBA Top Shot purchase', 'Dapper ACCEPTED'];
 
   // Get all deposit activities
@@ -247,6 +247,8 @@ async function calculationForexRealistion(df) {
       depositPaymentId: despositObject.payment_id
     }
   })
+
+  let warning;
 
   // Now go through the df and deal with each withdrawal activity
   df = df.map(
@@ -270,12 +272,11 @@ async function calculationForexRealistion(df) {
         const currencyWithdrawal = row.get('total_currency');
         const depositsUsed = [deposits[depositKey].depositPaymentId]
         const depositDates = [deposits[depositKey].date]
-        let warning;
+
         const calculateCurrencyEquivalentCost = (depositKey, usdWithdrawal, partialCalculated = 0) => {
           if (warning) {
             return;
           }
-
           if (deposits[depositKey].remaining >= usdWithdrawal) {
             deposits[depositKey].remaining = deposits[depositKey].remaining - usdWithdrawal;
 
