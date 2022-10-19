@@ -340,7 +340,7 @@ async function reconcileSalesWithP2PPurchases(df, purchases) {
         const purchaseDetails = purchases.find(purchase => purchase.moment_id === row.get('moment_id'))
         if (purchaseDetails) {
           // update row data
-          const saleProfit = purchaseDetails.subtotal_usd - row.get('total_usd')
+          const saleProfit = row.get('total_usd') - purchaseDetails.subtotal_usd
           row = row.set('sale_profit_usd', saleProfit)
           if (row.get('usd_to_currency_rate')) {
             row = row.set('sale_profit_currency', (saleProfit * row.get('usd_to_currency_rate')).toFixed(2))
